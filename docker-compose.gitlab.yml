@@ -9,7 +9,7 @@ services:
       - '4430:443'
       - '220:22' 
     volumes:
-      - './config:/etc/gitlab'
-      - './logs:/var/log/gitlab'
-      - './data:/var/opt/gitlab'
-    shm_size: '256m' 
+      - ${RUTAVOLUMES}/config:/etc/gitlab
+      - ${RUTAVOLUMES}/logs:/var/log/gitlab
+      - ${RUTAVOLUMES}/data:/var/opt/gitlab
+    shm_size: '256m'

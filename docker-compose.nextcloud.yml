@@ -39,13 +39,13 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: /Volumes/data_M2/docker/volumes/nextcloud_db
+      device: ${RUTAVOLUMES}/nextcloud_db
       o: bind
   nextcloud:
     driver: local
     driver_opts:
       type: none
-      device: /Volumes/data_M2/docker/volumes/nextcloud_core
+      device: ${RUTAVOLUMES}/nextcloud_core
       o: bind
   data_m2:
     driver: local
