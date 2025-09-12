@@ -11,6 +11,11 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: Unlock macOS keychain
+        run: security -v unlock-keychain -p $KEYCHAIN_PASSWORD ~/Library/Keychains/login.keychain-db
+        env:
+        KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+
       - name: Checkout repo
         uses: actions/checkout@v4
 
