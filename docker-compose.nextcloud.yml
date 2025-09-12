@@ -1,0 +1,61 @@
+services:
+  db:
+    image: mariadb:11
+    container_name: nextcloud_db
+    restart: always
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    environment:
+      MYSQL_ROOT_PASSWORD: supersecurepassword
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+      MYSQL_PASSWORD: nextcloudpass
+    volumes:
+      - db:/var/lib/mysql
+
+  app:
+    image: nextcloud:28
+    container_name: nextcloud_app
+    restart: always
+    depends_on:
+      - db
+    environment:
+      MYSQL_PASSWORD: nextcloudpass
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+      MYSQL_HOST: db
+      OVERWRITEHOST: nextcloud.juanluisacebal.com
+      OVERWRITEPROTOCOL: https
+      NEXTCLOUD_TRUSTED_DOMAINS: nextcloud.juanluisacebal.com
+      TRUSTED_PROXIES: 172.16.0.0/12,10.0.0.0/8,192.168.0.0/16
+    volumes:
+      - nextcloud:/var/www/html
+      - data_m2:/var/data_m2
+      - data_ssd:/var/data_ssd
+    ports:
+      - "888:80"
+
+volumes:
+  db:
+    driver: local
+    driver_opts:
+      type: none
+      device: /Volumes/data_M2/docker/volumes/nextcloud_db
+      o: bind
+  nextcloud:
+    driver: local
+    driver_opts:
+      type: none
+      device: /Volumes/data_M2/docker/volumes/nextcloud_core
+      o: bind
+  data_m2:
+    driver: local
+    driver_opts:
+      type: none
+      device: /Volumes/data_M2
+      o: bind
+  data_ssd:
+    driver: local
+    driver_opts:
+      type: none
+      device: /Volumes/data_SSD
+      o: bind
