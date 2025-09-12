@@ -15,7 +15,7 @@ jobs:
 
       - name: Ejecutar despliegue
         run: |
-          cd $RUTA_COMPOSES
+          #cd $RUTA_COMPOSES
           git pull --recurse-submodules
 
           files=(docker-compose*.yml)
