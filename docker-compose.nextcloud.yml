@@ -1,6 +1,6 @@
 services:
   db:
-    image: mariadb:11
+    image: mariadb:latest
     container_name: nextcloud_db
     restart: always
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
@@ -13,7 +13,7 @@ services:
       - db:/var/lib/mysql
 
   app:
-    image: nextcloud:28
+    image: nextcloud:latest
     container_name: nextcloud_app
     restart: always
     depends_on:
