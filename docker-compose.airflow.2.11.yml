@@ -3,10 +3,10 @@ services:
     image: apache/airflow:2.11.0
     environment:
       - RUTAVOLUMES=${RUTAVOLUMES}
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=mysql+pymysql://airflow:airflow@mysql:3306/airflow
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow_postgres:5432/airflow
       - AIRFLOW__DATABASE__LOAD_DEFAULT_CONNECTIONS=False
     volumes:
-          - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - ${RUTAVOLUMES}/airflow:/opt/airflow
     ports:
       - "8080:8080"
     restart: unless-stopped
@@ -18,9 +18,6 @@ services:
       - POSTGRES_PASSWORD=airflow
       - POSTGRES_DB=airflow
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ${RUTAVOLUMES}/postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-
-    volumes:
-      postgres_data:
