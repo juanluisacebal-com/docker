@@ -23,6 +23,7 @@ jobs:
       - name: Ejecutar despliegue
         run: |
           cd $RUTA_COMPOSES
+          echo "Ruta de los repos: $RUTA_COMPOSES"
           git pull --recurse-submodules
 
           cd docker
