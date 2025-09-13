@@ -12,7 +12,7 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: postgres:15
+    image: postgres:16
     environment:
       - RUTAVOLUMES=${RUTAVOLUMES}
       - POSTGRES_USER=airflow
@@ -22,4 +22,3 @@ services:
       - ${RUTAVOLUMES}/postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-      
