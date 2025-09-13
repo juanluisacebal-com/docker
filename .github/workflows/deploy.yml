@@ -15,13 +15,14 @@ jobs:
         run: security -v unlock-keychain -p $KEYCHAIN_PASSWORD ~/Library/Keychains/login.keychain-db
         env:
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          RUTA_COMPOSES: ${{ secrets.RUTA_COMPOSES }}
 
       - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Ejecutar despliegue
         run: |
-          #cd $RUTA_COMPOSES
+          cd $RUTA_COMPOSES
           git pull --recurse-submodules
 
           files=(docker-compose*.yml)
