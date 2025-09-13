@@ -4,8 +4,7 @@ services:
     environment:
       - RUTAVOLUMES=${RUTAVOLUMES}
     volumes:
-      - ${RUTAVOLUMES}/airflow/dags:/opt/airflow/dags
-      - ${RUTAVOLUMES}/airflow/config:/opt/airflow/config
+      - ${RUTAVOLUMES}/airflow:/opt/airflow
     ports:
       - "8080:8080"
     restart: unless-stopped
