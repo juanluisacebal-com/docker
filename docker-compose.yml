@@ -1,16 +1,5 @@
 services:
-  whatsapp-bot:
-    image: openwa/wa-automate:latest
-    container_name: whatsapp-bot
-    restart: unless-stopped
-    ports:
-      - "5500:8085"
-    environment:
-      - PORT=8085
-      - MULTI_DEVICE=true
-      - ENABLE_API=true
-    volumes:
-      - ${RUTAVOLUMES}/wa-automate:/home/pptruser/.config
-    command: ["--api", "--no-sandbox"]
-    shm_size: "1gb"
-    platform: linux/amd64   # 👈 fuerza emulación x86 en ARM64 con QEMU
+  test-service:
+    image: hello-world
+    container_name: test-service
+    restart: "no"
