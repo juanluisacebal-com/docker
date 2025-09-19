@@ -3,3 +3,25 @@ services:
     image: hello-world
     container_name: test-service
     restart: "no"
+
+
+  rsync:
+    image: alpine:latest
+    container_name: rsync_backup
+    environment:
+      - TZ=Europe/Madrid
+    volumes:
+      - /Volumes/DATA_M2:/data_m2:ro
+      - /Volumes/DATA_SSD/Backup_m2:/backup
+    entrypoint: >
+      sh -c "apk add --no-cache rsync tzdata;
+      ln -snf /usr/share/zoneinfo/Europe/Madrid /etc/localtime;
+      echo Europe/Madrid > /etc/timezone;
+      while true;
+      do
+        echo \"[$(date '+%Y-%m-%d %H:%M:%S')] Iniciando sincronización...\";
+        rsync -avz --delete --copy-unsafe-links /data_m2/ /backup/ 2>&1 | tee /backup/rsync.log | sed \"s/^/[$(date '+%Y-%m-%d %H:%M:%S')] /\" ;
+        echo \"[$(date '+%Y-%m-%d %H:%M:%S')] Esperando 20 minutos antes de la próxima sincronización...\";
+        sleep 1200;
+      done"
+      #      sh -c "apk add --no-cache rsync && rsync -avz /data_m2/ /backup/"
