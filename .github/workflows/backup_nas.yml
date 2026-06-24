@@ -1,0 +1,82 @@
+name: Sync NAS to Github
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # Todos los días a las 03:00 AM
+  workflow_dispatch: # Permite ejecutarlo a mano desde el botón
+
+jobs:
+  backup:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Configurar Git para Pushear al Privado
+        run: |
+          cd proyectos
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git remote set-url origin https://x-access-token:${{ secrets.PAT_PROYECTOS }}@github.com/juanluisacebal/proyectos.git
+          
+          # Nos aseguramos de estar en main
+          git checkout main
+          git pull origin main
+
+      - name: Recopilar docker-compose de Ugreen
+        run: |
+          echo "Buscando contenedores en el NAS..."
+          
+          # Carpetas de origen a buscar
+          DIRS=("/volume1/@appstore" "/volume2/@appstore" "/volume1/docker" "/volume2/docker")
+          
+          for dir in "${DIRS[@]}"; do
+            if [ -d "$dir" ]; then
+              # Buscamos los archivos docker-compose.yml (sin bajar demasiados niveles para no tardar)
+              find "$dir" -maxdepth 3 -name "docker-compose.yml" 2>/dev/null | while read file; do
+                # Extraemos el nombre de la carpeta (el nombre del proyecto)
+                project_name=$(basename "$(dirname "$file")")
+                
+                # Limpiamos el nombre si viene de la appstore (ej: com.ugreen.docker.siyuan -> siyuan)
+                clean_name=${project_name##*.}
+                
+                # Excluimos la propia carpeta de proyectos para evitar bucles
+                if [ "$clean_name" != "proyectos" ]; then
+                  echo "Copiando backup de: $clean_name"
+                  mkdir -p "proyectos/$clean_name"
+                  cp "$file" "proyectos/$clean_name/docker-compose.yml"
+                  
+                  # Si existe un archivo .env, lo copiamos también por seguridad
+                  if [ -f "$(dirname "$file")/.env" ]; then
+                    cp "$(dirname "$file")/.env" "proyectos/$clean_name/.env"
+                  fi
+                fi
+              done
+            fi
+          done
+
+      - name: Commit y Push si hay cambios
+        run: |
+          cd proyectos
+          
+          # Vemos si hay archivos nuevos o modificados
+          if [[ -n $(git status -s) ]]; then
+            echo "Se han detectado cambios. Subiendo a Github..."
+            git add .
+            git commit -m "chore(backup): sincronización automática desde la UI de Ugreen"
+            git push origin main
+            
+            # Ahora que el submódulo se ha actualizado, hacemos commit en el repo público docker
+            cd ..
+            git config --local user.email "github-actions[bot]@users.noreply.github.com"
+            git config --local user.name "github-actions[bot]"
+            git add proyectos
+            git commit -m "chore(backup): actualizar submódulo con los últimos backups del NAS"
+            # Hacemos push usando el token general (aquí si usa el GITHUB_TOKEN del runner)
+            git push origin main
+          else
+            echo "No hay contenedores nuevos ni modificados. Nada que subir."
+          fi
