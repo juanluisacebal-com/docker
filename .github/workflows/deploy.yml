@@ -1,4 +1,4 @@
-name: Deploy to DXP2800 NAS
+name: Deploy to gu
 
 on:
   push:

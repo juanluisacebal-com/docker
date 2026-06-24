@@ -1,4 +1,4 @@
-name: Discovery NAS Paths
+name: Discovery gu Paths
 
 on:
   workflow_dispatch:

@@ -1,4 +1,4 @@
-name: Sync NAS to Github
+name: Sync gu to Github
 
 on:
   schedule:
@@ -26,9 +26,9 @@ jobs:
           git checkout main
           git pull origin main
 
-      - name: Recopilar docker-compose de Ugreen
+      - name: Recopilar docker-compose de gu
         run: |
-          echo "Buscando contenedores en el NAS..."
+          echo "Buscando contenedores en gu..."
           
           # Carpetas de origen a buscar
           DIRS=("/volume1/@appstore" "/volume2/@appstore" "/volume1/docker" "/volume2/docker")
@@ -40,7 +40,7 @@ jobs:
                 # Extraemos el nombre de la carpeta (el nombre del proyecto)
                 project_name=$(basename "$(dirname "$file")")
                 
-                # Limpiamos el nombre si viene de la appstore (ej: com.ugreen.docker.siyuan -> siyuan)
+                # Limpiamos el nombre si viene de la appstore (ej: com.gu.docker.siyuan -> siyuan)
                 clean_name=${project_name##*.}
                 
                 # Excluimos la propia carpeta de proyectos para evitar bucles
@@ -66,7 +66,7 @@ jobs:
           if [[ -n $(git status -s) ]]; then
             echo "Se han detectado cambios. Subiendo a Github..."
             git add .
-            git commit -m "chore(backup): sincronización automática desde la UI de Ugreen"
+            git commit -m "chore(backup): sincronización automática desde la UI de gu"
             git push origin main
             
             # Ahora que el submódulo se ha actualizado, hacemos commit en el repo público docker
@@ -74,7 +74,7 @@ jobs:
             git config --local user.email "github-actions[bot]@users.noreply.github.com"
             git config --local user.name "github-actions[bot]"
             git add proyectos
-            git commit -m "chore(backup): actualizar submódulo con los últimos backups del NAS"
+            git commit -m "chore(backup): actualizar submódulo con los últimos backups de gu"
             # Hacemos push usando el token general (aquí si usa el GITHUB_TOKEN del runner)
             git push origin main
           else
