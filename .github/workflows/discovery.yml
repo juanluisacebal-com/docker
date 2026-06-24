@@ -1,0 +1,26 @@
+name: Discovery NAS Paths
+
+on:
+  workflow_dispatch:
+
+jobs:
+  discover:
+    runs-on: self-hosted
+    steps:
+      - name: Search in Volume 1
+        run: |
+          echo "Buscando docker-compose.yml ocultos en /volume1..."
+          find /volume1 -name "docker-compose.yml" 2>/dev/null | grep -v "volume1/proyectos" | head -n 30 || true
+          
+      - name: Search in Volume 2
+        run: |
+          echo "Buscando docker-compose.yml ocultos en /volume2..."
+          find /volume2 -name "docker-compose.yml" 2>/dev/null | grep -v "volume2/proyectos" | head -n 30 || true
+          
+      - name: Inspect running containers
+        run: |
+          echo "Inspeccionando los contenedores actuales para ver sus rutas de origen..."
+          docker ps --format "{{.Names}}" | while read container; do
+            echo "--- $container ---"
+            docker inspect $container | grep -i "working_dir" || true
+          done
