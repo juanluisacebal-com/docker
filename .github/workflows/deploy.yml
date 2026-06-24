@@ -8,6 +8,10 @@ on:
 jobs:
   deploy:
     runs-on: self-hosted
+    # 1ª Capa de Seguridad: Cancelar automáticamente si el repositorio no es el original,
+    # o si el commit lo ha hecho alguien que no sea juanluisacebal-com
+    if: github.repository == 'juanluisacebal-com/docker' && github.actor == 'juanluisacebal-com'
+    
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v4
@@ -15,8 +19,33 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
-      - name: Levantar el entorno con docker compose
+      - name: Get changed files in proyectos/
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: proyectos/**/docker-compose.yml
+
+      - name: Levantar solo contenedores modificados
+        if: steps.changed-files.outputs.any_changed == 'true'
         run: |
-          cd proyectos/stock_screener
-          docker compose down
-          docker compose up -d --build
+          echo "Se han detectado cambios en los siguientes archivos:"
+          echo "${{ steps.changed-files.outputs.all_changed_files }}"
+          
+          # Convertimos la lista de archivos separados por espacios a un bucle
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            # Extraemos la ruta de la carpeta base (quitamos 'docker-compose.yml')
+            dir_path=$(dirname "$file")
+            
+            echo "---"
+            echo "Levantando entorno en $dir_path..."
+            cd $dir_path
+            
+            # Ejecutamos compose en background recreando el contenedor si el archivo ha cambiado.
+            # --remove-orphans asegurará que si has borrado un servicio, lo detenga.
+            docker compose up -d --remove-orphans
+            
+            # Volvemos a la raíz para el siguiente ciclo del bucle
+            cd - > /dev/null
+          done
+          echo "---"
+          echo "Todos los contenedores modificados han sido actualizados."
