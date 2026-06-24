@@ -1,0 +1,36 @@
+name: Deploy to DXP2800 NAS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Deploy via SSH to NAS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.NAS_HOST }}
+          username: ${{ secrets.NAS_USER }}
+          key: ${{ secrets.NAS_SSH_KEY }}
+          port: ${{ secrets.NAS_PORT }}
+          script: |
+            # Ir a la carpeta donde esté clonado el repositorio docker en tu NAS
+            cd /ruta/a/tu/carpeta/docker
+            
+            # Traer los últimos cambios y actualizar los submódulos (proyectos)
+            git pull origin main
+            git submodule update --init --recursive --remote
+            
+            # Levantar el entorno con docker compose
+            cd proyectos/stock_screener
+            docker compose down
+            docker compose up -d --build
