@@ -29,33 +29,34 @@ jobs:
 
       - name: Recopilar docker-compose de gu
         run: |
-          echo "Buscando contenedores en gu..."
+          echo "Buscando contenedores en gu de forma precisa..."
           
-          # Carpetas de origen a buscar
-          DIRS=("/volume1/@appstore" "/volume2/@appstore" "/volume1/docker" "/volume2/docker")
+          # Obtenemos las rutas exactas (working_dir) de los proyectos desde los contenedores en ejecución
+          # Limpiamos duplicados con sort -u
+          project_dirs=$(docker ps -q | xargs docker inspect --format '{{ index .Config.Labels "com.docker.compose.project.working_dir" }}' | grep -v '^$' | sort -u)
           
-          for dir in "${DIRS[@]}"; do
-            if [ -d "$dir" ]; then
-              # Buscamos los archivos docker-compose.yml (sin bajar demasiados niveles para no tardar)
-              find "$dir" -maxdepth 3 -name "docker-compose.yml" 2>/dev/null | while read file; do
-                # Extraemos el nombre de la carpeta (el nombre del proyecto)
-                project_name=$(basename "$(dirname "$file")")
-                
-                # Limpiamos el nombre si viene de la appstore (ej: com.gu.docker.siyuan -> siyuan)
-                clean_name=${project_name##*.}
-                
-                # Excluimos la propia carpeta de proyectos para evitar bucles
-                if [ "$clean_name" != "proyectos" ]; then
-                  echo "Copiando backup de: $clean_name"
-                  mkdir -p "proyectos/$clean_name"
-                  cp "$file" "proyectos/$clean_name/docker-compose.yml"
-                  
-                  # Si existe un archivo .env, lo copiamos también por seguridad
-                  if [ -f "$(dirname "$file")/.env" ]; then
-                    cp "$(dirname "$file")/.env" "proyectos/$clean_name/.env"
-                  fi
-                fi
+          for dir in $project_dirs; do
+            echo "Inspeccionando proyecto en: $dir"
+            
+            # Buscamos cualquier archivo yaml/yml en esa ruta exacta (profundidad 1)
+            # Evitamos procesar la carpeta proyectos en sí misma
+            if [[ "$dir" != *"/proyectos" ]]; then
+              
+              project_name=$(basename "$dir")
+              clean_name=${project_name##*.}
+              
+              mkdir -p "proyectos/$clean_name"
+              
+              # Copiamos cualquier archivo de compose (yml o yaml)
+              find "$dir" -maxdepth 1 -type f \( -name "*.yml" -o -name "*.yaml" \) 2>/dev/null | while read file; do
+                echo "-> Copiando backup de: $clean_name ($(basename "$file"))"
+                cp "$file" "proyectos/$clean_name/$(basename "$file")"
               done
+              
+              # Si existe archivo .env, lo copiamos por seguridad
+              if [ -f "$dir/.env" ]; then
+                cp "$dir/.env" "proyectos/$clean_name/.env"
+              fi
             fi
           done
 
