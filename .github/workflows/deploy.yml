@@ -9,8 +9,8 @@ jobs:
   deploy:
     runs-on: self-hosted
     # 1ª Capa de Seguridad: Cancelar automáticamente si el repositorio no es el original,
-    # o si el commit lo ha hecho alguien que no sea juanluisacebal-com
-    if: github.repository == 'juanluisacebal-com/docker' && github.actor == 'juanluisacebal-com'
+    # o si el commit lo ha hecho alguien que no sea juanluisacebal
+    if: github.repository == 'juanluisacebal-com/docker' && github.actor == 'juanluisacebal'
     
     steps:
       - name: Checkout repository and submodules
