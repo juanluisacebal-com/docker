@@ -53,14 +53,14 @@ jobs:
                 cp "$file" "proyectos/$clean_name/$(basename "$file")"
                 
                 # Ofuscamos contraseñas, tokens y secretos en el archivo copiado
-                # Busca cualquier variable que contenga PASSWORD, SECRET, TOKEN o KEY y cambia su valor por "***"
-                sed -i -E 's/([A-Za-z0-9_]*(PASSWORD|SECRET|TOKEN|KEY)[A-Za-z0-9_]*[:=])[ \t]*"?.*"?/\1 "***"/g' "proyectos/$clean_name/$(basename "$file")"
+                # Busca cualquier variable que contenga PASSWORD, SECRET, TOKEN, KEY, AUTH o USER y cambia su valor por "***"
+                sed -i -E 's/([A-Za-z0-9_]*(PASSWORD|SECRET|TOKEN|KEY|AUTH|USER)[A-Za-z0-9_]*[:=])[ \t]*"?.*"?/\1 "***"/g' "proyectos/$clean_name/$(basename "$file")"
               done
               
               # Si existe archivo .env, lo copiamos por seguridad (y lo ofuscamos)
               if [ -f "$dir/.env" ]; then
                 cp "$dir/.env" "proyectos/$clean_name/.env"
-                sed -i -E 's/([A-Za-z0-9_]*(PASSWORD|SECRET|TOKEN|KEY)[A-Za-z0-9_]*[:=])[ \t]*"?.*"?/\1 "***"/g' "proyectos/$clean_name/.env"
+                sed -i -E 's/([A-Za-z0-9_]*(PASSWORD|SECRET|TOKEN|KEY|AUTH|USER)[A-Za-z0-9_]*[:=])[ \t]*"?.*"?/\1 "***"/g' "proyectos/$clean_name/.env"
               fi
             fi
           done

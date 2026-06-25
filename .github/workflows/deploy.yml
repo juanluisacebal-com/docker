@@ -26,6 +26,32 @@ jobs:
         with:
           files: proyectos/**/docker-compose.yml
 
+      - name: Guardián de Secretos (Anti-Secrets y Auto-Revert)
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          echo "Escaneando archivos en busca de secretos expuestos..."
+          has_secrets=false
+          
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            # Busca claves sensibles que NO usen variables de entorno ($VAR o ${VAR})
+            # Excluimos "USER" explícitamente según lo solicitado.
+            if grep -iE '[a-zA-Z0-9_]*(PASSWORD|SECRET|TOKEN|KEY|AUTH)[a-zA-Z0-9_]*[ \t]*[:=]' "$file" | grep -qvE '\$'; then
+              echo "::error file=$file::SECRETO EXPUESTO DETECTADO EN: $file"
+              has_secrets=true
+            fi
+          done
+          
+          if [ "$has_secrets" = true ]; then
+            echo "¡Alarma de seguridad! Abortando despliegue y revirtiendo commit..."
+            git config --local user.email "github-actions[bot]@users.noreply.github.com"
+            git config --local user.name "github-actions[bot]"
+            # Deshacemos el commit problemático
+            git revert --no-edit HEAD
+            git push origin main
+            exit 1
+          fi
+          echo "Análisis de seguridad superado. No hay secretos expuestos."
+
       - name: Levantar solo contenedores modificados
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |
