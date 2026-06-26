@@ -1,0 +1,27 @@
+name: CI/CD Stock Screener
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Build stock_screener image
+        run: |
+          docker compose -f docker-compose.yml build stock_screener
+
+      - name: Deploy stock_screener container
+        run: |
+          docker compose -f docker-compose.yml up -d stock_screener
+
+      - name: Verify Streamlit is up
+        run: |
+          # Wait a few seconds for the container to start
+          sleep 10
+          curl -f http://localhost:8501 || exit 1
