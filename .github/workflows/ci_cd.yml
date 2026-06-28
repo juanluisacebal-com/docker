@@ -22,6 +22,11 @@ jobs:
 
       - name: Verify Streamlit is up
         run: |
-          # Wait a few seconds for the container to start
-          sleep 10
-          curl -f http://localhost:8501 || exit 1
+          # Wait up to 30 seconds for the container to start
+          for i in {1..10}; do
+            curl -s -f http://localhost:8501 > /dev/null && echo "Streamlit is up!" && exit 0
+            echo "Waiting for Streamlit..."
+            sleep 3
+          done
+          echo "Streamlit didn't start in time."
+          exit 1
