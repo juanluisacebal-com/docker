@@ -67,27 +67,44 @@ jobs:
           fi
           echo "Análisis de seguridad superado. No hay secretos expuestos."
 
-      - name: Levantar solo contenedores modificados
-        if: steps.changed-files.outputs.any_changed == 'true'
+      # -------------------------------------------------
+      # NEW STEP: Detect root docker-compose.yml changes
+      # -------------------------------------------------
+      - name: Check root docker-compose.yml change
+        id: root-change
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -q '^docker-compose.yml$'; then
+            echo "root_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "root_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      # -------------------------------------------------
+      # UPDATE: Levantar contenedores modificados (incluye root)
+      # -------------------------------------------------
+      - name: Levantar contenedores modificados
+        if: steps.changed-files.outputs.any_changed == 'true' || steps.root-change.outputs.root_changed == 'true'
         run: |
           echo "Se han detectado cambios en los siguientes archivos:"
           echo "${{ steps.changed-files.outputs.all_changed_files }}"
-          
-          # Convertimos la lista de archivos separados por espacios a un bucle
-          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            # Extraemos la ruta de la carpeta base (quitamos 'docker-compose.yml')
-            dir_path=$(dirname "$file")
-            
+
+          # Si hay cambios en proyectos, levanta esos directorios
+          if [ "${{ steps.changed-files.outputs.any_changed }}" == "true" ]; then
+            for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+              dir_path=$(dirname "$file")
+              echo "---"
+              echo "Levantando entorno en $dir_path..."
+              cd $dir_path
+              docker compose up -d --remove-orphans
+              cd - > /dev/null
+            done
+          fi
+
+          # Si docker-compose.yml cambió, levanta todo el compose (incluido root services)
+          if [ "${{ steps.root-change.outputs.root_changed }}" == "true" ]; then
             echo "---"
-            echo "Levantando entorno en $dir_path..."
-            cd $dir_path
-            
-            # Ejecutamos compose en background recreando el contenedor si el archivo ha cambiado.
-            # --remove-orphans asegurará que si has borrado un servicio, lo detenga.
+            echo "Levantando todos los servicios (cambio en docker-compose.yml)..."
             docker compose up -d --remove-orphans
-            
-            # Volvemos a la raíz para el siguiente ciclo del bucle
-            cd - > /dev/null
-          done
+          fi
           echo "---"
           echo "Todos los contenedores modificados han sido actualizados."
