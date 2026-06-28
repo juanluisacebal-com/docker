@@ -37,13 +37,13 @@ services:
 
   stock_screener:
     build:
-      context: ../Mis_documentos_importantes/PROYECTOS/stock_screener/streamlit
+      context: ./PROYECTOS/stock_screener/streamlit
       dockerfile: Dockerfile
     container_name: stock_screener
     ports:
       - "8501:8501"
     volumes:
-      - ../Mis_documentos_importantes/PROYECTOS/stock_screener/streamlit:/app
+      - ./PROYECTOS/stock_screener/streamlit:/app
     environment:
       - TZ=Europe/Madrid
       - DB_USER=airflow
