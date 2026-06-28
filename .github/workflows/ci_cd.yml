@@ -28,5 +28,6 @@ jobs:
             echo "Waiting for Streamlit..."
             sleep 3
           done
-          echo "Streamlit didn't start in time."
+          echo "Streamlit didn't start in time. Aquí están los logs del contenedor:"
+          docker logs stock_screener
           exit 1
