@@ -24,4 +24,33 @@ services:
         echo \"[$(date '+%Y-%m-%d %H:%M:%S')] Esperando 20 minutos antes de la próxima sincronización...\";
         sleep 1200;
       done"
-      #      sh -c "apk add --no-cache rsync && rsync -avz /data_m2/ /backup/"
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  stock_screener:
+    build:
+      context: ./Mis_documentos_importantes/PROYECTOS/stock_screener/streamlit
+      dockerfile: Dockerfile
+    container_name: stock_screener
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./Mis_documentos_importantes/PROYECTOS/stock_screener/streamlit:/app
+    environment:
+      - TZ=Europe/Madrid
+      - DB_USER=airflow
+      - DB_PASS=airflow
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=airflow
+    depends_on:
+      - postgres
+    restart: unless-stopped
