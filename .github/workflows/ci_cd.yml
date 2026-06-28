@@ -24,7 +24,7 @@ jobs:
         run: |
           # Wait up to 30 seconds for the container to start
           for i in {1..10}; do
-            docker exec stock_screener curl -s -f http://localhost:8501 > /dev/null && echo "Streamlit is up!" && exit 0
+            docker exec stock_screener python -c "import urllib.request; urllib.request.urlopen('http://localhost:8501')" > /dev/null 2>&1 && echo "Streamlit is up!" && exit 0
             echo "Waiting for Streamlit..."
             sleep 3
           done
